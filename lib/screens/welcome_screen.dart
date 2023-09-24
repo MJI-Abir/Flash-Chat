@@ -1,3 +1,5 @@
+import 'package:animated_text_kit/animated_text_kit.dart';
+import 'package:flash_chat/core/utils/routes.dart';
 import 'package:flutter/material.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -7,11 +9,21 @@ class WelcomeScreen extends StatefulWidget {
   _WelcomeScreenState createState() => _WelcomeScreenState();
 }
 
-class _WelcomeScreenState extends State<WelcomeScreen> {
+class _WelcomeScreenState extends State<WelcomeScreen>
+    with TickerProviderStateMixin {
+  late AnimationController logoAnimationController, screenAnimationController;
+  late Animation logoAnimation, screenAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    animate();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: screenAnimation.value,
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
@@ -20,59 +32,115 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           children: <Widget>[
             Row(
               children: <Widget>[
-                Container(
-                  child: Image.asset('images/logo.png'),
-                  height: 60.0,
-                ),
-                const Text(
-                  'Flash Chat',
-                  style: TextStyle(
-                    fontSize: 45.0,
-                    fontWeight: FontWeight.w900,
+                Hero(
+                  tag: 'logo',
+                  child: Container(
+                    height: logoAnimation.value * 80,
+                    child: Image.asset('images/logo.png'),
                   ),
+                ),
+                AnimatedTextKit(
+                  animatedTexts: [
+                    WavyAnimatedText(
+                      'Flash Chat',
+                      textStyle: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 45.0,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                  isRepeatingAnimation: true,
                 ),
               ],
             ),
             const SizedBox(
               height: 48.0,
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: Material(
-                elevation: 5.0,
-                color: Colors.lightBlueAccent,
-                borderRadius: BorderRadius.circular(30.0),
-                child: MaterialButton(
-                  onPressed: () {
-                    //Go to login screen.
-                  },
-                  minWidth: 200.0,
-                  height: 42.0,
-                  child: const Text(
-                    'Log In',
-                  ),
-                ),
-              ),
+            AuthButton(
+              context: context,
+              id: 'Log In',
+              color: Colors.lightBlueAccent,
+              onPress: () {
+                Navigator.pushNamed(context, Routes.loginScreen);
+              },
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: Material(
-                color: Colors.blueAccent,
-                borderRadius: BorderRadius.circular(30.0),
-                elevation: 5.0,
-                child: MaterialButton(
-                  onPressed: () {
-                    //Go to registration screen.
-                  },
-                  minWidth: 200.0,
-                  height: 42.0,
-                  child: const Text(
-                    'Register',
-                  ),
-                ),
-              ),
+            AuthButton(
+              context: context,
+              id: 'Register',
+              color: Colors.blueAccent,
+              onPress: () {
+                Navigator.pushNamed(context, Routes.registrationScreen);
+              },
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    logoAnimationController.dispose();
+    screenAnimationController.dispose();
+  }
+
+  void animate() {
+    logoAnimationController = AnimationController(
+      duration: const Duration(seconds: 1),
+      vsync: this,
+    );
+    screenAnimationController = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+    logoAnimation = CurvedAnimation(
+        parent: logoAnimationController, curve: Curves.decelerate);
+
+    screenAnimation = ColorTween(begin: Colors.blueGrey, end: Colors.white)
+        .animate(screenAnimationController);
+
+    logoAnimationController.addListener(() {
+      setState(() {});
+    });
+    screenAnimationController.addListener(() {
+      setState(() {});
+    });
+    logoAnimationController.forward();
+    screenAnimationController.forward();
+  }
+}
+
+class AuthButton extends StatelessWidget {
+  const AuthButton({
+    super.key,
+    required this.context,
+    required this.id,
+    required this.color,
+    required this.onPress,
+  });
+
+  final BuildContext context;
+  final String id;
+  final Color color;
+  final VoidCallback onPress;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0),
+      child: Material(
+        elevation: 5.0,
+        color: color,
+        borderRadius: BorderRadius.circular(30.0),
+        child: MaterialButton(
+          onPressed: onPress,
+          minWidth: 200.0,
+          height: 42.0,
+          child: Text(
+            id,
+          ),
         ),
       ),
     );
