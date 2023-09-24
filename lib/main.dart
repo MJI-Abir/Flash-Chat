@@ -1,7 +1,12 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flash_chat/core/utils/routes.dart';
 import 'package:flutter/material.dart';
 
-void main() => runApp(const FlashChat());
+void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  runApp(const FlashChat());
+}
 
 class FlashChat extends StatelessWidget {
   const FlashChat({super.key});
@@ -10,11 +15,6 @@ class FlashChat extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        textTheme: const TextTheme(
-          bodyLarge: TextStyle(color: Colors.black54),
-        ),
-      ),
       initialRoute: Routes.welcomeScreen,
       routes: Routes.routes,
     );

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "615116855373",
+    "project_id": "flash-chat-fe8cf",
+    "storage_bucket": "flash-chat-fe8cf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:615116855373:android:73bad9cba0a6aee198e404",
+        "android_client_info": {
+          "package_name": "com.jawadabir.flash_chat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBxYiTKI1oej-BDjaePQ1wVGY-GQu0h_7U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

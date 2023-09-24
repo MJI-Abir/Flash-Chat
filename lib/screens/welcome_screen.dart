@@ -1,5 +1,6 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flash_chat/core/utils/routes.dart';
+import 'package:flash_chat/core/widgets/customized_button.dart';
 import 'package:flutter/material.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -57,7 +58,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
             const SizedBox(
               height: 48.0,
             ),
-            AuthButton(
+            CustomizedButton(
               context: context,
               id: 'Log In',
               color: Colors.lightBlueAccent,
@@ -65,7 +66,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                 Navigator.pushNamed(context, Routes.loginScreen);
               },
             ),
-            AuthButton(
+            CustomizedButton(
               context: context,
               id: 'Register',
               color: Colors.blueAccent,
@@ -112,37 +113,4 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   }
 }
 
-class AuthButton extends StatelessWidget {
-  const AuthButton({
-    super.key,
-    required this.context,
-    required this.id,
-    required this.color,
-    required this.onPress,
-  });
 
-  final BuildContext context;
-  final String id;
-  final Color color;
-  final VoidCallback onPress;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Material(
-        elevation: 5.0,
-        color: color,
-        borderRadius: BorderRadius.circular(30.0),
-        child: MaterialButton(
-          onPressed: onPress,
-          minWidth: 200.0,
-          height: 42.0,
-          child: Text(
-            id,
-          ),
-        ),
-      ),
-    );
-  }
-}
