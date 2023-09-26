@@ -17,7 +17,7 @@ class Routes{
   static Map<String, WidgetBuilder> routes = {
     welcomeScreen: (_) => const WelcomeScreen(),
     chatScreen: (_) => const ChatScreen(),
-    loginScreen: (_) => LoginScreen(),
-    registrationScreen: (_) => RegistrationScreen(),
+    loginScreen: (_) => const LoginScreen(),
+    registrationScreen: (_) => const RegistrationScreen(),
   };
 }

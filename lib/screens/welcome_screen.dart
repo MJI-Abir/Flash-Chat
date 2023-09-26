@@ -35,7 +35,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
               children: <Widget>[
                 Hero(
                   tag: 'logo',
-                  child: Container(
+                  child: SizedBox(
                     height: logoAnimation.value * 80,
                     child: Image.asset('images/logo.png'),
                   ),

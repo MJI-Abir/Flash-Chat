@@ -33,7 +33,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Flexible(
                 child: Hero(
                   tag: 'logo',
-                  child: Container(
+                  child: SizedBox(
                     height: 200.0,
                     child: Image.asset('images/logo.png'),
                   ),
@@ -80,9 +80,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     final user = await _auth.signInWithEmailAndPassword(
                         email: email, password: password);
                     // ignore: use_build_context_synchronously
-                    if (user != null) {
-                      Navigator.pushNamed(context, Routes.chatScreen);
-                    }
+
+                    Navigator.pushNamed(context, Routes.chatScreen);
                   } catch (e) {
                     final snackBar = SnackBar(
                       duration: const Duration(seconds: 2),
