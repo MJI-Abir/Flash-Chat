@@ -1,4 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
+import 'dart:io';
+
+import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +16,9 @@ class ChatScreen extends StatefulWidget {
 }
 
 late User loggedInUser;
+
+late CameraController _controller;
+late Future<void> _initializeControllerFuture;
 
 class _ChatScreenState extends State<ChatScreen> {
   final _firestore = FirebaseFirestore.instance;
@@ -43,6 +49,14 @@ class _ChatScreenState extends State<ChatScreen> {
         leading: null,
         actions: <Widget>[
           IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.call),
+          ),
+          IconButton(
+            onPressed: () {},
+            icon: const Icon(Icons.video_camera_back),
+          ),
+          IconButton(
             icon: const Icon(Icons.close),
             onPressed: () {
               //Implement logout functionality
@@ -61,20 +75,91 @@ class _ChatScreenState extends State<ChatScreen> {
           children: <Widget>[
             MessageStream(firestore: _firestore),
             Container(
-              decoration: kMessageContainerDecoration,
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Expanded(
-                    child: TextField(
-                      controller: messageTextController,
-                      onChanged: (value) {
-                        messageText = value;
-                      },
-                      decoration: kMessageTextFieldDecoration,
+                    child: Material(
+                      color: Colors.black12,
+                      borderRadius: BorderRadius.circular(30),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 6,
+                            child: TextField(
+                              controller: messageTextController,
+                              onChanged: (value) {
+                                messageText = value;
+                              },
+                              decoration: kMessageTextFieldDecoration,
+                            ),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: IconButton(
+                                icon: const Icon(
+                                  Icons.attachment_rounded,
+                                ),
+                                onPressed: () {}),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: IconButton(
+                              icon: const Icon(
+                                Icons.camera_alt,
+                              ),
+                              onPressed: () async {
+                                WidgetsFlutterBinding.ensureInitialized();
+
+                                // Obtain a list of the available cameras on the device.
+                                final cameras = await availableCameras();
+
+                                // Get a specific camera from the list of available cameras.
+                                final firstCamera = cameras.first;
+                                _controller = CameraController(
+                                  // Get a specific camera from the list of available cameras.
+                                  firstCamera,
+                                  // Define the resolution to use.
+                                  ResolutionPreset.medium,
+                                );
+
+                                // Take the Picture in a try / catch block. If anything goes wrong,
+                                // catch the error.
+                                try {
+                                  TakePictureScreen(camera: firstCamera);
+                                  // Ensure that the camera is initialized.
+                                  await _initializeControllerFuture;
+
+                                  // Attempt to take a picture and get the file `image`
+                                  // where it was saved.
+                                  final image = await _controller.takePicture();
+
+                                  if (!mounted) return;
+
+                                  // If the picture was taken, display it on a new screen.
+                                  await Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          DisplayPictureScreen(
+                                        // Pass the automatically generated path to
+                                        // the DisplayPictureScreen widget.
+                                        imagePath: image.path,
+                                      ),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  // If an error occurs, log the error to the console.
+                                  print(e);
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  TextButton(
+                  IconButton(
                     onPressed: () {
                       messageTextController.clear();
                       _firestore.collection('messages').add(
@@ -84,9 +169,8 @@ class _ChatScreenState extends State<ChatScreen> {
                         },
                       );
                     },
-                    child: const Text(
-                      'Send',
-                      style: kSendButtonTextStyle,
+                    icon: const Icon(
+                      Icons.send,
                     ),
                   ),
                 ],
@@ -199,6 +283,83 @@ class MessageBubble extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// A screen that allows users to take a picture using a given camera.
+class TakePictureScreen extends StatefulWidget {
+  const TakePictureScreen({
+    super.key,
+    required this.camera,
+  });
+
+  final CameraDescription camera;
+
+  @override
+  TakePictureScreenState createState() => TakePictureScreenState();
+}
+
+class TakePictureScreenState extends State<TakePictureScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // To display the current output from the Camera,
+    // create a CameraController.
+    _controller = CameraController(
+      // Get a specific camera from the list of available cameras.
+      widget.camera,
+      // Define the resolution to use.
+      ResolutionPreset.medium,
+    );
+
+    // Next, initialize the controller. This returns a Future.
+    _initializeControllerFuture = _controller.initialize();
+
+  }
+
+  @override
+  void dispose() {
+    // Dispose of the controller when the widget is disposed.
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      // You must wait until the controller is initialized before displaying the
+      // camera preview. Use a FutureBuilder to display a loading spinner until the
+      // controller has finished initializing.
+      body: FutureBuilder<void>(
+        future: _initializeControllerFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            // If the Future is complete, display the preview.
+            return CameraPreview(_controller);
+          } else {
+            // Otherwise, display a loading indicator.
+            return const Center(child: CircularProgressIndicator());
+          }
+        },
+      ),
+    );
+  }
+}
+
+// A widget that displays the picture taken by the user.
+class DisplayPictureScreen extends StatelessWidget {
+  final String imagePath;
+
+  const DisplayPictureScreen({super.key, required this.imagePath});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Display the Picture')),
+      // The image is stored as a file on the device. Use the `Image.file`
+      // constructor with the given path to display the image.
+      body: Image.file(File(imagePath)),
     );
   }
 }
