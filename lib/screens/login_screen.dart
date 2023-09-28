@@ -79,9 +79,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   try {
                     final user = await _auth.signInWithEmailAndPassword(
                         email: email, password: password);
-                    // ignore: use_build_context_synchronously
 
-                    Navigator.pushNamed(context, Routes.chatScreen);
+                    // ignore: use_build_context_synchronously
+                    Navigator.pushNamed(context, Routes.homeScreen);
                   } catch (e) {
                     final snackBar = SnackBar(
                       duration: const Duration(seconds: 2),

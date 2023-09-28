@@ -12,6 +12,11 @@ const kMessageTextFieldDecoration = InputDecoration(
   border: InputBorder.none,
 );
 
+const kTabBarTextStyle = TextStyle(
+  color: Colors.black,
+  fontWeight: FontWeight.bold,
+  fontSize: 16,
+);
 
 const kTextFieldDecoration = InputDecoration(
   hintText: 'Enter value',

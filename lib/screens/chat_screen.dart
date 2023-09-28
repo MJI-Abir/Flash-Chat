@@ -1,9 +1,9 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flash_chat/screens/take_picture_screen.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flash_chat/core/utils/constants.dart';
@@ -17,14 +17,11 @@ class ChatScreen extends StatefulWidget {
 
 late User loggedInUser;
 
-late CameraController _controller;
-late Future<void> _initializeControllerFuture;
+final messageTextController = TextEditingController();
+final firestore = FirebaseFirestore.instance;
+final _auth = FirebaseAuth.instance;
 
 class _ChatScreenState extends State<ChatScreen> {
-  final _firestore = FirebaseFirestore.instance;
-  final _auth = FirebaseAuth.instance;
-
-  final messageTextController = TextEditingController();
   late String messageText;
 
   @override
@@ -73,7 +70,7 @@ class _ChatScreenState extends State<ChatScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            MessageStream(firestore: _firestore),
+            MessageStream(firestore: firestore),
             Container(
               padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
               child: Row(
@@ -136,7 +133,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   IconButton(
                     onPressed: () {
                       messageTextController.clear();
-                      _firestore.collection('messages').add(
+                      firestore.collection('messages').add(
                         {
                           'text': messageText,
                           'sender': loggedInUser.email,
@@ -261,6 +258,11 @@ class MessageBubble extends StatelessWidget {
   }
 }
 
+
+
+late CameraController _controller;
+late Future<void> _initializeControllerFuture;
+
 // A screen that allows users to take a picture using a given camera.
 class TakePictureScreen extends StatefulWidget {
   const TakePictureScreen({
@@ -298,6 +300,7 @@ class TakePictureScreenState extends State<TakePictureScreen> {
     super.dispose();
   }
 
+  bool isPressed = false;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -308,7 +311,9 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
+            XFile image;
             // If the Future is complete, display the preview.
+
             return Column(
               children: [
                 CameraPreview(_controller),
@@ -316,37 +321,65 @@ class TakePictureScreenState extends State<TakePictureScreen> {
                   child: Container(
                     padding: const EdgeInsets.only(bottom: 30),
                     alignment: Alignment.bottomCenter,
-                    child: IconButton(
-                      iconSize: 40,
-                      icon: const Icon(Icons.camera_outlined),
-                      onPressed: () async {
-                        // Take the Picture in a try / catch block. If anything goes wrong,
-                        // catch the error.
-                        try {
-                          // Ensure that the camera is initialized.
-                          await _initializeControllerFuture;
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Visibility(
+                          visible: !isPressed,
+                          child: IconButton(
+                            icon: const Icon(Icons.camera_outlined),
+                            iconSize: 40,
+                            onPressed: () async {
+                              setState(() {
+                                isPressed = true;
+                              });
+                              // Take the Picture in a try / catch block. If anything goes wrong,
+                              // catch the error.
+                              try {
+                                // Ensure that the camera is initialized.
+                                await _initializeControllerFuture;
+                        
+                                // Attempt to take a picture and get the file `image`
+                                // where it was saved.
+                                image = await _controller.takePicture();
+                        
+                                if (!mounted) return;
+                        
+                                // If the picture was taken, display it on a new screen.
+                                // await Navigator.of(context).push(
+                                //   MaterialPageRoute(
+                                //     builder: (context) => DisplayPictureScreen(
+                                //       // Pass the automatically generated path to
+                                //       // the DisplayPictureScreen widget.
+                                //       imagePath: image.path,
+                                //     ),
+                                //   ),
+                                // );
+                              } catch (e) {
+                                // If an error occurs, log the error to the console.
+                                print(e);
+                              }
+                            },
+                          ),
+                        ),
+                        Visibility(
+                          visible: isPressed,
+                          child: IconButton(
+                            icon: const Icon(Icons.send),
+                            onPressed: () {
+                              // messageTextController.clear();
 
-                          // Attempt to take a picture and get the file `image`
-                          // where it was saved.
-                          final image = await _controller.takePicture();
-
-                          if (!mounted) return;
-
-                          // If the picture was taken, display it on a new screen.
-                          await Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => DisplayPictureScreen(
-                                // Pass the automatically generated path to
-                                // the DisplayPictureScreen widget.
-                                imagePath: image.path,
-                              ),
-                            ),
-                          );
-                        } catch (e) {
-                          // If an error occurs, log the error to the console.
-                          print(e);
-                        }
-                      },
+                              // _firestore.collection('messages').add(
+                              //   {
+                              //     'text': image?.path,
+                              //     'sender': loggedInUser.email,
+                              //   },
+                              // );
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -357,25 +390,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
             return const Center(child: CircularProgressIndicator());
           }
         },
-      ),
-    );
-  }
-}
-
-// A widget that displays the picture taken by the user.
-class DisplayPictureScreen extends StatelessWidget {
-  final String imagePath;
-
-  const DisplayPictureScreen({super.key, required this.imagePath});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Display the Picture')),
-      // The image is stored as a file on the device. Use the `Image.file`
-      // constructor with the given path to display the image.
-      body: Image.file(
-        File(imagePath),
       ),
     );
   }
