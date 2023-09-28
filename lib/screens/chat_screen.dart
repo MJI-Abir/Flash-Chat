@@ -117,41 +117,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
                                 // Get a specific camera from the list of available cameras.
                                 final firstCamera = cameras.first;
-                                _controller = CameraController(
-                                  // Get a specific camera from the list of available cameras.
-                                  firstCamera,
-                                  // Define the resolution to use.
-                                  ResolutionPreset.medium,
+
+                                // ignore: use_build_context_synchronously
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        TakePictureScreen(camera: firstCamera),
+                                  ),
                                 );
-
-                                // Take the Picture in a try / catch block. If anything goes wrong,
-                                // catch the error.
-                                try {
-                                  TakePictureScreen(camera: firstCamera);
-                                  // Ensure that the camera is initialized.
-                                  await _initializeControllerFuture;
-
-                                  // Attempt to take a picture and get the file `image`
-                                  // where it was saved.
-                                  final image = await _controller.takePicture();
-
-                                  if (!mounted) return;
-
-                                  // If the picture was taken, display it on a new screen.
-                                  await Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          DisplayPictureScreen(
-                                        // Pass the automatically generated path to
-                                        // the DisplayPictureScreen widget.
-                                        imagePath: image.path,
-                                      ),
-                                    ),
-                                  );
-                                } catch (e) {
-                                  // If an error occurs, log the error to the console.
-                                  print(e);
-                                }
                               },
                             ),
                           ),
@@ -315,7 +289,6 @@ class TakePictureScreenState extends State<TakePictureScreen> {
 
     // Next, initialize the controller. This returns a Future.
     _initializeControllerFuture = _controller.initialize();
-
   }
 
   @override
@@ -336,7 +309,49 @@ class TakePictureScreenState extends State<TakePictureScreen> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             // If the Future is complete, display the preview.
-            return CameraPreview(_controller);
+            return Column(
+              children: [
+                CameraPreview(_controller),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.only(bottom: 30),
+                    alignment: Alignment.bottomCenter,
+                    child: IconButton(
+                      iconSize: 40,
+                      icon: const Icon(Icons.camera_outlined),
+                      onPressed: () async {
+                        // Take the Picture in a try / catch block. If anything goes wrong,
+                        // catch the error.
+                        try {
+                          // Ensure that the camera is initialized.
+                          await _initializeControllerFuture;
+
+                          // Attempt to take a picture and get the file `image`
+                          // where it was saved.
+                          final image = await _controller.takePicture();
+
+                          if (!mounted) return;
+
+                          // If the picture was taken, display it on a new screen.
+                          await Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => DisplayPictureScreen(
+                                // Pass the automatically generated path to
+                                // the DisplayPictureScreen widget.
+                                imagePath: image.path,
+                              ),
+                            ),
+                          );
+                        } catch (e) {
+                          // If an error occurs, log the error to the console.
+                          print(e);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            );
           } else {
             // Otherwise, display a loading indicator.
             return const Center(child: CircularProgressIndicator());
@@ -359,7 +374,9 @@ class DisplayPictureScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Display the Picture')),
       // The image is stored as a file on the device. Use the `Image.file`
       // constructor with the given path to display the image.
-      body: Image.file(File(imagePath)),
+      body: Image.file(
+        File(imagePath),
+      ),
     );
   }
 }
