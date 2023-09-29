@@ -13,7 +13,6 @@ const kMessageTextFieldDecoration = InputDecoration(
 );
 
 const kTabBarTextStyle = TextStyle(
-  color: Colors.black,
   fontWeight: FontWeight.bold,
   fontSize: 16,
 );
